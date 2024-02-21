@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>뉴스검색</title>
+</head>
+<body>
+<h3>뉴스검색</h3>
+<div>
+  <form action="/pubdata/news/search" method="GET">
+    <label for="search">검색어</label>
+    <input id='search' type="text" name="keyword">
+    <button id="searchBtn" type="button">검색</button>
+  </form>
+</div>
+<div>
+  <p>검색결과</p>
+<!--  제목, 뉴스링크, 요약정보, 작성일 -->
+  <table>
+    <thead>
+      <tr>
+        <th>제목</th>
+        <th>요약</th>
+        <th>작성일</th>
+      </tr>
+    </thead>
+    <tbody>
+<!--      <tr>-->
+<!--        <td>글로벌 수주 '낭보'…이차전지 소재 자리매김 '총력'</td>-->
+<!--        <td>https://www.pinpointnews.co.kr</td>-->
+<!--        <td>LG화학이 배터리 소재 사업을 중심으로 발 빠르게 체질개선에 나서고 있다.</td>-->
+<!--        <td>Tue, 20 Feb 2024 16:02:00 +0900</td>-->
+<!--      </tr>-->
+    </tbody>
+  </table>
+</div>
+<script>
+  search.addEventListener('keydown',evt=>{
+    console.log(evt)
+    evt.preventDefault();
+    if(evt.key !== 'Enter') return;
+    callNaverApi(evt);
+  });
+  searchBtn.addEventListener('click',callNaverApi);
+
+  function callNaverApi(evt){
+    const keyword = search.value;
+    const url = `/pubdata/news/search?keyword=${keyword}`;
+    const option = {
+      method : 'GET',
+    };
+    fetch(url,option)
+      .then(res=>{
+        if(!res.ok) {
+          throw new Error('응답오류발생');
+        }
+        return res.json();   //응답메시지 바디를 읽어서 json포맷문자열=>js객체로 변환
+      })
+      //.then(res=>makeHtml(res))
+      .then(makeHtml)
+      .catch(error=>console.error('오류 : ',error));
+  }
+
+  function makeHtml(res){
+    const $tbody = document.querySelector('tbody');
+    let html = '';
+    console.log(res.items)
+    res.items.forEach(article=>{
+       html += `<tr>
+                  <td><a href='${article.originallink}' target='blank'>${article.title}</a></td>
+                  <td>${article.description}</td>
+                  <td>${chageDateTime(article.pubDate)}</td>
+                 </tr>`;
+    });
+    $tbody.innerHTML = html;
+  }
+
+  function chageDateTime(dt){
+      // 주어진 날짜 문자열을 Date 객체로 변환
+    const date = new Date(dt);
+
+    // 필요한 날짜 및 시간 요소를 추출
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // getMonth() 함수는 0부터 11까지의 값을 반환하므로 1을 더해줍니다.
+    const day = date.getDate();
+    let hour = date.getHours();
+    const ampm = hour >= 12 ? 'pm' : 'am';
+
+    // 12시간제로 변환
+    hour = hour % 12;
+    hour = hour ? hour : 12; // 0시를 12시로 변환
+
+    // 원하는 형식으로 날짜 및 시간 문자열을 조합
+    const dateString = year + '-' + month + '-' + day + ' ' + ampm + ' ' + hour + ':00';
+    return dateString;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>주식조회</title>
+</head>
+<body>
+<h3>주식조회</h3>
+<div>
+  <form action="/pubdata/stock/search" method="GET">
+    <div>
+      <label for="search">주식명 : </label>
+      <input id='search' type="text" name="keyword">
+    </div>
+    <div>
+      <label for="search">시작일 : </label>
+      <input id='beginDate' type="text" name="beginDate">
+    </div>
+    <div>
+      <label for="search">종료일 : </label>
+      <input id='endDate' type="text" name="endDate">
+    </div>
+    <div>
+    <button id="searchBtn" type="button">검색</button>
+    </div>
+  </form>
+</div>
+<div>
+  <p>검색결과</p>
+  <!--  종목, 시작일, 종료일 -->
+  <table>
+    <thead>
+    <tr>
+      <th>종목</th>
+      <th>BasDt</th>
+    </tr>
+    </thead>
+    <tbody>
+      <!-- <tr>
+        <td>
+          <label for="">sk하이닉스</label>
+        </td>
+        <td>
+          <label for="">20240201</label>
+        </td>
+        <td>
+          <label for="">20240202</label>
+        </td>
+      </tr> -->
+    </tbody>
+  </table>
+</div>
+</body>
+
+<script>
+    search.addEventListener('keydown',evt=>{
+    if(evt.key == 'Enter') callStockData(evt);
+  });
+  searchBtn.addEventListener('click',callStockData);
+
+  function callStockData(evt){
+    const keyword = search.value;
+    const begin = beginDate.value;
+    const end = endDate.value;
+    const url = `/pubdata/stock/search?keyword=${keyword}&beginDate=${begin}&endDate=${end}`;
+    const option = {
+      method : 'GET',
+    };
+    fetch(url,option)
+      .then(res=>{
+        if(!res.ok) {
+          throw new Error('응답오류발생');
+        }
+        // console.log(res.json());
+        return res.json();
+           //응답메시지 바디를 읽어서 json포맷문자열=>js객체로 변환
+      })
+      .then(res=>makeHtml(res))
+      // .then(makeHtml)
+      .catch(error=>console.error('오류 : ',error));
+  }
+
+  function makeHtml(res){
+    const $tbody = document.querySelector('tbody');
+    let html = '';
+    const arr = res.response.body.items.item; 
+    console.log(arr);
+    arr.forEach(stock=>{
+       html += ` <tr>
+        <td>
+          <label for="">${stock.itmsNm}</label>
+        </td>
+        <td>
+          <label for="">${stock.basDt}</label>
+        </td>
+      </tr> `;
+    });
+    $tbody.innerHTML = html;
+  }
+
+</script>
+</html>
